@@ -22,39 +22,22 @@ exports.create = (text, callback) => {
 };
 
 exports.readAll = (callback) => {
-  fs.readdir(exports.dataDir, (err, fileData) => {
+  fs.readdir(exports.dataDir, (err, data) => {
     if (err) {
       console.log(err);
     } else {
-      var todos = _.map(fileData, (id) => {
-        // exports.readOne(id, callback);
-        //id= each single file
-        var filePath = exports.dataDir + id;
-        var file = path.basename(id, '.txt'); //return data obj
-        console.log('FILE', file);
-        console.log('ID:', id);
-        console.log('PATH', filePath);
-
-        var text = fs.readFile(filePath, callback);
-        // fs.readFile(exports.dataDir + `/${id}.txt`, (err, data) =>{
-        if (err) {
-          console.log('error');
-        } else {
-          return {
-            id: file,
-            text: file,
-            text: text.toString(),
-          };
-        }
-        // } );
-        // return {
-        //   id: file,
-        //   text: text,
-        // };
+      var todos = _.map(data, (id, text) => {
+        var filePath = path.join(exports.dataDir, id);
+        var file = path.basename(id, '.txt');
+        //00001.txt 00002.txt
+        // var id = id.slice(0, -4);
+        //id = 00001 00002
+        var data = fs.readFileSync(filePath, 'utf8');
+        // data = todo1 ... todo2
+        return {id: file, text: data};
       });
+      callback(null, todos);
     }
-    console.log('todos:', todos[0]);
-    callback(null, todos); //
   });
 };
 
