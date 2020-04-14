@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
+var Promise = require('bluebird');
+const readFilePromise = Promise.promisify(fs.readFile);
 
 var items = {};
 
@@ -22,22 +24,22 @@ exports.create = (text, callback) => {
 };
 
 exports.readAll = (callback) => {
-  fs.readdir(exports.dataDir, (err, data) => {
+  fs.readdir(exports.dataDir, (err, files) => {
     if (err) {
-      console.log(err);
-    } else {
-      var todos = _.map(data, (id, text) => {
-        var filePath = path.join(exports.dataDir, id);
-        var file = path.basename(id, '.txt');
-        //00001.txt 00002.txt
-        // var id = id.slice(0, -4);
-        //id = 00001 00002
-        var data = fs.readFileSync(filePath, 'utf8');
-        // data = todo1 ... todo2
-        return {id: file, text: data};
-      });
-      callback(null, todos);
+      throw ('err');
     }
+    var todos = _.map(files, (file) => {
+      var filePath = path.join(exports.dataDir, file);
+      var id = path.basename(file, '.txt');
+      return readFilePromise(filePath).then(fileData => {
+        return {
+          id: id,
+          text: fileData.toString()
+        };
+      });
+    });
+    Promise.all(todos)
+      .then(items => callback(null, items), err => callback(err));
   });
 };
 
@@ -75,18 +77,24 @@ exports.update = (id, text, callback) => {
 
 exports.delete = (id, callback) => {
   //Remove file using Node.js
+  var filepath = path.join(exports.dataDir, `${counter.reformatId(id)}.txt`);
+  fs.unlink(filepath, (err) => {
+    callback(err);
+  });
   //The asynchronous one is fs.unlink()
   //The synchronous one is fsunlinkSync()
-  fs.readFile(exports.dataDir + `/${id}.txt`, (err, fileData) => {
-    if (err) {
-      callback(new Error(`No item with id: ${id}`));
-    } else {
-      fs.unlink(exports.dataDir + `/${id}.txt`, (err) => {
-        callback(new Error(`No item with id: ${id}`));
-      });
-    }
-  });
+  // fs.readFile(exports.dataDir + `/${id}.txt`, (err, fileData) => {
+  //   if (err) {
+  //     callback(new Error(`No item with id: ${id}`));
+  //   } else {
+  //     fs.unlink(exports.dataDir + `/${id}.txt`, (err) => {
+  //       callback(new Error(`No item with id: ${id}`));
+  //     });
+  //   }
+  // });
 };
+
+
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
 

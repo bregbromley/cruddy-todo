@@ -50,6 +50,9 @@ exports.getNextUniqueId = (callback) => {
 // counter = counter + 1;
 // return zeroPaddedNumber(counter);
 
+exports.reformatId = (id) => {
+  return zeroPaddedNumber(Number(id));
+};
 
 // Configuration -- DO NOT MODIFY //////////////////////////////////////////////
 
